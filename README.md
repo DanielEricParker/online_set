@@ -1,0 +1,3 @@
+An online, multiplayer, real-time implementation of the game SET. The goal is to make it possible to play online with friends.
+
+The initial plan is for this to be a "web app", using some of the modern, trendy javascript libraries: node.js for the server backend, socket.io for client-server communication, and perhaps MySQL for a persistent database. Even though javascript is a sub-optimal language, it has enough infrastructure around it that seems like the easiest choice at the moment. After all, it's not like there's anything really speed-critical here.
