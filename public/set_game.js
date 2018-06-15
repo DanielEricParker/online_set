@@ -1,8 +1,10 @@
-
+//import libraries
 var socket = io();
-var $usernameInput = $('#usernameInput');
+
+//set global variables
 var connected = false;
 
+//function to "log in" by setting the username and telling the server
 function setUsername() {
     if(connected == false){
         console.log("Setting username");
@@ -14,19 +16,42 @@ function setUsername() {
     }
 };
 
-
-
+//sets up the list of online users
+//called whenever someone logs in or out
 socket.on("setup", function(data){
     //the list of users
     var users = data.online_users;
     console.log(users);
 
     //update the html
-    usersList = "";
+    var usersList = "";
     for(var u = 0; u < users.length; u++){
         usersList += "<li> " + users[u]+"\n";
     }
     $(user_list).html(usersList);
+});
+
+//function to send a chat message
+function sendChat() {
+    console.log("Sending chat message");
+    var msg = $('#inputMessage').val().trim();
+    console.log(msg)
+    $('#inputMessage').val("");
+
+    socket.emit('chat message', msg);
+};
+
+
+//shows new chat messages
+socket.on("chat message", function(data){
+    console.log("New chat message");
+    console.log(data);
+    var newMessage = "";
+    newMessage = "<li> <b> " + data.username + "</b>: " + data.message + "</li>";
+
+    console.log(newMessage);
+    $(messages).append(newMessage);
+    $("#chatmessages").scrollTop($("#chatmessages")[0].scrollHeight);
 });
 
 // $(function () {

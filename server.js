@@ -107,24 +107,23 @@ io.on('connection', function(socket) {
 	});
 
 	//listen for a new chat message
-	socket.on('new message', function(data) {
+	socket.on('chat message', function(msg) {
+		console.log("New chat message: " + msg)
 		//create message
 		var newMsg = new Chat({
-			username: data.username,
-			content: data.message,
+			username: socket.user,
+			message: msg,
 			timestamp: new Date()
 		});
+		console.log(newMsg);
 		newMsg.save(function(err,msg){
 			//send message to those connected
-			io.emit('chat message', msg);
+			io.emit('chat message', newMsg);
 		})
 	});
 
 	function updateUsersList(){
-		socket.emit('setup', {
-			online_users: online_users
-		});
-		socket.broadcast.emit('setup', {
+		io.emit('setup', {
 			online_users: online_users
 		});
 	}

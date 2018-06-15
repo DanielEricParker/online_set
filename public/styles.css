@@ -15,39 +15,43 @@ body {
 #users {
   border: 2px solid red;
   /*width: 400px;*/
-  height: 300px;
+  height: 200px;
   overflow: scroll;
   /*float: right;*/
   /*position: relative;*/
 }
 
 #chat {
-  border: 2px solid red;
-  /*width: 400px;*/
-  height: 300px;
   /*float: right;*/
   position: relative;
+  height: 400px;
+  border: 2px solid red;
+}
+#chatmessages{
+  border: 2px solid green;
+  /*width: 400px;*/
+  height: 350px;
+  overflow: scroll;
 }
 #chatbox{
   position: absolute;
   bottom: 0;
-  width: 100%;
+  /*width: 100%;*/
   /*border: 2px solid red;*/
   padding: 5px;
   margin: 0px;
-  overflow: scroll;
 }
-#chatbox input{
+/*#chatbox input{
   padding: 5px;
-  /*position: relative;*/
-  width: 70%;
-  /*margin-right: 10%;*/
+  position: relative;
+  width: 60%;
+  margin-right: 10%;
  }
  #chatbox buttom{
    width: 19%;
    border: none;
    padding: 10px;
- }
+ }*/
 #messages { list-style-type: none; margin: 0; padding: 0; }
 #messages li { padding: 5px 10px; }
 #messages li:nth-child(odd) { background: #eee; }

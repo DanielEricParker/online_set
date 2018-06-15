@@ -23,10 +23,14 @@
       </div>
 
       <div id="chat">
-      	<ul id="messages"></ul>
-      	<form id="chatbox" action="">
-      		<input id="inputMessage" autocomplete="off"/> <button>Send</button>
-      	</form>
+        <div id="chatmessages">
+        	<ul id="messages"></ul>
+        </div>
+
+        <div id="chatbox">
+      		<input id="inputMessage" autocomplete="off"/>
+          <button type="button" class="submitChatMsg" onclick="sendChat()">Send</button>
+        </div>
       </div>
 
       </div>
