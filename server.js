@@ -68,27 +68,42 @@ app.get('/msg', function(req, res) {
 	});	
 });
 
+
+
+
+
 // ************** Sockets *********************//
+
+
+
+// set global variables
+var online_users = []
 
 //wait for connections
 io.on('connection', function(socket) {
 
-	// set global variables
-	var online_users = []
-
-	//emit list of online users
-	socket.emit('setup', {
-		online_users: online_users
-	});
-
 	//listen for new users
-	socket.on('new user', function(data){
-		console.log('a user connected');
+	socket.on('add user', function(username){
+		console.log("New user "+username+" connected.");
+		socket.user = username;
+		online_users.push(username)
+		//emit list of online users
+		console.log(online_users)
+		updateUsersList();
 	});
 
 	//listen for disconnect
-	socket.on('disconnect',function(){
-		console.log('user disconnected');
+	socket.on('disconnect',() => {
+		console.log();
+		console.log("User '"+socket.user+"' disconnected");
+		//remove rom users list.
+
+		var userindex = online_users.indexOf(socket.user);
+		if (userindex > -1) {
+		  online_users.splice(userindex, 1);
+		}
+		updateUsersList();
+		console.log(online_users);
 	});
 
 	//listen for a new chat message
@@ -104,6 +119,16 @@ io.on('connection', function(socket) {
 			io.emit('chat message', msg);
 		})
 	});
+
+	function updateUsersList(){
+		socket.emit('setup', {
+			online_users: online_users
+		});
+		socket.broadcast.emit('setup', {
+			online_users: online_users
+		});
+	}
+
 });
 
 

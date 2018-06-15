@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- some code borrowed from https://github.com/socketio/socket.io/blob/master/examples/chat/public/main.js -->
+<html>
+	<head>
+		<title> Online Set! </title>
+	  <link rel="stylesheet" href="styles.css">
+    </head>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="/set_game.js"></script>
+    <body>
+      <div id="wrapper">
+      <div id="rightbar">
+
+      <div id="users">
+          <div id="login">
+            <input id="usernameInput" value="[Username]" type="text" autocomplete="off"/>
+            <button type="button" class="submitUsername" onclick="setUsername()">Log in</button>
+          </div>
+          Online Now:
+          <ul id="user_list">
+          </ul>
+      </div>
+
+      <div id="chat">
+      	<ul id="messages"></ul>
+      	<form id="chatbox" action="">
+      		<input id="inputMessage" autocomplete="off"/> <button>Send</button>
+      	</form>
+      </div>
+
+      </div>
+
+      <div id="game">
+        <div id = "cards">
+
+        </div>
+      </div>
+      </div>
+    </body>
+</html>

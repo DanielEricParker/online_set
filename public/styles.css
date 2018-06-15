@@ -1,0 +1,60 @@
+/** { margin: 0; padding: 0; box-sizing: border-box; }*/
+body {
+  font: 13px Helvetica, Arial;
+}
+#wrapper {
+  margin: auto;
+  width: 910px;
+  border: 2px solid green;
+}
+
+#rightbar{
+  float:right;
+  width: 300px;
+}
+#users {
+  border: 2px solid red;
+  /*width: 400px;*/
+  height: 300px;
+  overflow: scroll;
+  /*float: right;*/
+  /*position: relative;*/
+}
+
+#chat {
+  border: 2px solid red;
+  /*width: 400px;*/
+  height: 300px;
+  /*float: right;*/
+  position: relative;
+}
+#chatbox{
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /*border: 2px solid red;*/
+  padding: 5px;
+  margin: 0px;
+  overflow: scroll;
+}
+#chatbox input{
+  padding: 5px;
+  /*position: relative;*/
+  width: 70%;
+  /*margin-right: 10%;*/
+ }
+ #chatbox buttom{
+   width: 19%;
+   border: none;
+   padding: 10px;
+ }
+#messages { list-style-type: none; margin: 0; padding: 0; }
+#messages li { padding: 5px 10px; }
+#messages li:nth-child(odd) { background: #eee; }
+
+#game {
+  float: left;
+  width: 600px;
+  height: 600px;
+  border: 2px solid blue;
+}
