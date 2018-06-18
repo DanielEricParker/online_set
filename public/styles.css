@@ -2,15 +2,19 @@
 body {
   font: 13px Helvetica, Arial;
 }
+
+h1{
+  text-align: center;
+}
 #wrapper {
   margin: auto;
-  width: 910px;
+  width: 940px;
   border: 2px solid green;
 }
 
 #rightbar{
   float:right;
-  width: 300px;
+  width: 250px;
 }
 #users {
   border: 2px solid red;
@@ -58,7 +62,33 @@ body {
 
 #game {
   float: left;
-  width: 600px;
-  height: 600px;
+  width: 675px;
+  min-height: 600px;
   border: 2px solid blue;
+  padding: 5px;
+}
+
+#cards{
+  text-align: center;
+  /*padding: 5px;*/
+}
+
+#cards div {
+  border: 1px solid black;
+  width: 200px;
+  height: 130px;
+  margin: 5px 10px;
+
+  text-align: center;
+}
+
+.foundSet{
+  text-align: center;
+}
+.foundSet button{
+  padding: 10px;
+}
+
+.selected{
+  background-color: red;
 }

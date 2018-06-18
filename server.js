@@ -38,17 +38,17 @@ app.get('/',function(req,res) {
 //but it's more convenient to represent everything as a single number and convert back and forth because javascript is silly
 
 
-var cards = new Map();//maps only work with new browsers apparently
+var cards = new Array(81);//maps only work with new browsers apparently
 //keys are number 0 to 80
 //values are:
 //	 "deck" if the card is in the deck
 //	 "table" if in play
 //	 "user_[username]" if already collected
-for(var i = 0; i < 10; i++){
-	cards.set(i,"deck");
+for(var i = 0; i < 81; i++){
+	cards[i]="deck";
 }
-var deckSize = cards.size;
-var numTableCards = 0;
+var deckSize = cards.length;
+var tableSize = 0;
 var scores = new Map();
 var gameOver = false;
 var selectingSet = false;
@@ -78,25 +78,40 @@ function arrToNum(arr){
 // console.log(numToArr(14))
 // console.log(numToArr(79))
 
+//function to set up a new game and initialize default values;
+function newGame(){
+	for(var i = 0; i < 81; i++){
+		cards[i]="deck";
+	}
+	var deckSize = cards.length;
+	var tableSize = 0;
+	var scores = new Map();
+	var gameOver = false;
+	var selectingSet = false;
+
+	drawCards(12);
+	io.emit('new game');
+}
+
+
 //function to draw cards randomly from the deck
 //modifies the cards array
 function drawCards(numberToDraw){
 	//find the cards in the deck
 	var deckCards = [];
-	for (var [card, place] of cards.entries()) {
-	  if (place == "deck"){
-	  	deckCards.push(card);
+	for (var i = 0; i < 81; i++) {
+	  if (cards[i] == "deck"){
+	  	deckCards.push(i);
 	  }
 	}
-	console.log("There are "+ deckSize +" cards in the deck.");
 
 	for (var i = 0; i < numberToDraw; i++){
-		console.log("Deck:");
-		console.log(cards);
+		// console.log("Deck:");
+		// console.log(cards);
 
 		var rand = deckCards[Math.floor((Math.random() * deckSize))];
-		console.log("Choose card "+ rand);
-		cards.set(rand,"table");
+		// console.log("Choose card "+ rand);
+		cards[rand] = "table";
 
 		//remove cards from deck list
 		var rand_index = deckCards.indexOf(rand);
@@ -106,8 +121,9 @@ function drawCards(numberToDraw){
 
 		//increment global counters
 		deckSize--;
-		numTableCards++;
+		tableSize++;
 	}
+	console.log("There are "+ deckSize +" cards in the deck.");
 }
 
 //testing:
@@ -145,14 +161,15 @@ function checkSet(card1, card2, card3){
 function checkSetsOnTable(){
 	//get all the cards on the table
 	var tableCards = [];
-	for (var [card, place] of cards.entries()) {
-		if (place == "table"){
-			tableCards.push(card);
-		}
+	for (var i = 0; i < 81; i++) {
+	  if (cards[i] == "table"){
+	  	tableCards.push(i);
+	  }
 	}
+
 	console.log("There are "+ tableCards.length +" cards on the table.");
 
-	for (var i = 0; i < numTableCards; i++){
+	for (var i = 0; i < tableSize; i++){
 		var c1 = numToArr(tableCards[i]);
 		for (var j = 0; j < i; j++){
 			var c2 = numToArr(tableCards[j]);
@@ -187,10 +204,10 @@ function collect_set(user, c1,c2,c3){
 		//if so
 		//assign those cards to that player
 		var username = "user_"+user;
-		cards.set(c1,username);
-		cards.set(c2,username);
-		cards.set(c2,username);
-		numTableCards -= 3; 
+		cards[c1] = username;
+		cards[c2] = username;
+		cards[c3] = username;
+		tableSize -= 3; 
 		if (scores.has(username)){
 			scores.set(username,3+scores.get(username));
 		}
@@ -205,7 +222,7 @@ function collect_set(user, c1,c2,c3){
 		//if there are fewer than 12 cards on the board,
 		//or no sets, then draw
 		var anySets = checkSetsOnTable();
-		while (numTableCards < 12 || !anySets){
+		while (tableSize < 12 || !anySets){
 			console.log("No sets and less than 12 cards on the table.")
 			if (deckSize > 0){
 				//draw cards. There must be at least 3
@@ -248,10 +265,12 @@ io.on('connection', function(socket) {
 	socket.on('add user', function(username){
 		console.log("New user "+username+" connected.");
 		socket.user = username;
-		online_users.push(username)
+		online_users.push(username);
 		//emit list of online users
-		console.log(online_users)
+		console.log(online_users);
 		updateUsersList();
+		socket.emit('dealing cards', cards);
+
 	});
 
 	//listen for disconnect
@@ -289,53 +308,52 @@ io.on('connection', function(socket) {
 
 	//a player thinks they found a set and has 5 seconds to select it
 	socket.on('found set', function(){
+		console.log("Player " + socket.user + " thinks they found a set.");
 		selectingSet = true;
 		io.emit('selecting set', socket.user);
-
 	});
 
 	//a player selected a set 
 	socket.on('selected set', function(set) {
+		console.log("Player " + socket.user + " submitted a set: "+set);
 		//should emit all players go back to the finding stage
 		//and the new board
 		selectingSet = false;
 
 		if (collect_set(socket.user, set.card1, set.card2, set.card3)){
+			console.log("It's a set!");
 			if (gameOver){
+				dealCards();
 				scoreGame();
 			} else {
 				dealCards();
-				io.emit('normal play');
+				io.emit('resume play');
 				return 0;
 			}
+		} else {
+			console.log("It isn't a set!");
+			io.emit('resume play');
 		}
-		//it isn't a set
-		io.emit('normal play');
 	});
 
-	//a new player joined and wants to know the board state
-	socket.on('get card info', function(){
-
-		
-
-		socket.emit('dealing cards', deckCards);
-
-		console.log(deckCards);
-	});
 
 	//function to tell the players what cards are currently on the table
 	function dealCards(){
 		io.emit('dealing cards', cards);
 	}
 
+	//function to do nothing until the new game starts
+	function waiter(){
+
+	}
+
 	//function called at the end of the game to score it and notify the players
 	function scoreGame(){
 		io.emit('game ended', scores);
 
+		setTimeout(waiter(), 3000);
+		newGame();
 	}
-
-
-
 
 });
 
@@ -345,3 +363,5 @@ io.on('connection', function(socket) {
 
 //start the server
 server.listen(3000);
+
+newGame();

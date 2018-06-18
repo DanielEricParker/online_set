@@ -3,43 +3,50 @@
 <html>
 	<head>
 		<title> Online Set! </title>
-	  <link rel="stylesheet" href="styles.css">
+      <script src="/socket.io/socket.io.js"></script>
+      <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+      <script src="/set_game.js"></script>
+      <link rel="stylesheet" href="styles.css">
     </head>
-<script src="/socket.io/socket.io.js"></script>
-<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-<script src="/set_game.js"></script>
+
     <body>
-      <div id="wrapper">
-      <div id="rightbar">
+        <h1>
+          Online Set!
+        </h1>
+        <div id="wrapper">
+        <div id="rightbar">
 
-      <div id="users">
-          <div id="login">
-            <input id="usernameInput" value="[Username]" type="text" autocomplete="off"/>
-            <button type="button" class="submitUsername" onclick="setUsername()">Log in</button>
+        <div id="users">
+            <div id="login">
+              <input id="usernameInput" value="[Username]" type="text" autocomplete="off"/>
+              <button type="button" class="submitUsername" onclick="setUsername()">Log in</button>
+            </div>
+            Online Now:
+            <ul id="user_list">
+            </ul>
+        </div>
+
+        <div id="chat">
+          <div id="chatmessages">
+          	<ul id="messages"></ul>
           </div>
-          Online Now:
-          <ul id="user_list">
-          </ul>
-      </div>
 
-      <div id="chat">
-        <div id="chatmessages">
-        	<ul id="messages"></ul>
+          <div id="chatbox">
+        		<input id="inputMessage" autocomplete="off"/>
+            <button type="button" class="submitChatMsg" onclick="sendChat()">Send</button>
+          </div>
         </div>
 
-        <div id="chatbox">
-      		<input id="inputMessage" autocomplete="off"/>
-          <button type="button" class="submitChatMsg" onclick="sendChat()">Send</button>
         </div>
-      </div>
 
-      </div>
-
-      <div id="game">
-        <div id = "cards">
-
+        <div id="game">
+          <div id = "cards">
+            Log in to see cards!
+          </div>
+          <div class="foundSet">
+            <button type=button onclick="foundSet()">Set! </button>
+          </div>
         </div>
-      </div>
-      </div>
+        </div>
     </body>
 </html>
