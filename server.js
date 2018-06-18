@@ -19,39 +19,6 @@ var io = require('socket.io')(server);
 //tell express where static files live
 app.use(express.static(__dirname+'/public'));
 
-// let's not use a database for now
-
-// //connect to the database
-// mongoose.connect("mongodb://localhost:27017/online-set");
-
-
-
-// //create a schema for chat
-// var ChatSchema = mongoose.Schema({
-// 	timestamp: Date,
-// 	username: String,
-// 	message: String
-// });
-
-
-// //create a model ("table") with the given schema
-// var Chat = mongoose.model('Chat',ChatSchema)
-
-
-
-// // allow CORS
-// //I'm not sure what this is for yet.
-// app.all('*', function(req, res, next) {
-//   res.header("Access-Control-Allow-Origin", "*");
-//   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-//   res.header('Access-Control-Allow-Headers', 'Content-type,Accept,X-Access-Token,X-Key');
-//   if (req.method == 'OPTIONS') {
-//     res.status(200).end();
-//   } else {
-//     next();
-//   }
-// });
-
 
 // ****************** ROUTES *******************//
 
@@ -60,16 +27,6 @@ app.get('/',function(req,res) {
 	//set the index for the public directory
 	res.sendfile('index.html');
 });
-
-//route for grabbing messages from the database
-//this seems a bit over-built to me
-app.get('/msg', function(req, res) {
-	Chat.find().exec(function(err, messages) {
-		//return messages
-		res.json(messages);		
-	});	
-});
-
 
 // ************* global variables and game code ************* //
 // This is the actual game code. Everything else is client-server communications.
@@ -93,6 +50,8 @@ for(var i = 0; i < 10; i++){
 var deckSize = cards.size;
 var numTableCards = 0;
 var scores = new Map();
+var gameOver = false;
+var selectingSet = false;
 
 function numToArr(number){
 	var a = number % 3;
@@ -219,7 +178,11 @@ function checkSetsOnTable(){
 //and associated logic
 function collect_set(user, c1,c2,c3){
 	//check if this really is a set
-	if (checkSet(numToArr(c1),numToArr(c2),numToArr(c3))){
+	if (cards[c1] == "table"
+	 	&& cards[c2] == "table"
+	 	&& cards[c3] == "table" 
+	 	&& checkSet(numToArr(c1),numToArr(c2),numToArr(c3))
+		){
 		console.log("Set! "+[c1,c2,c3]);
 		//if so
 		//assign those cards to that player
@@ -228,7 +191,7 @@ function collect_set(user, c1,c2,c3){
 		cards.set(c2,username);
 		cards.set(c2,username);
 		numTableCards -= 3; 
-		if scores.has(username){
+		if (scores.has(username)){
 			scores.set(username,3+scores.get(username));
 		}
 		else {
@@ -249,15 +212,16 @@ function collect_set(user, c1,c2,c3){
 				console.log("Drawing 3 cards.")
 				drawCards(3);
 				console.log(cards);
-			} elseif (anySets){
+			} else if(anySets) {
 				//there are < 12 cards and none in the deck,
 				//but still a set is still on the table
 				console.log("No cards in the deck, but set on the table.");				
 				return true;
 			} else {
 				//no cards left, so the game ends
-				console.log("No cards left. Scoring game.")
-				scoreGame();
+				// console.log("No cards left. Scoring game.")
+				// scoreGame();
+				gameOver = true;
 				return true;
 			}
 			anySets = checkSetsOnTable();
@@ -268,10 +232,7 @@ function collect_set(user, c1,c2,c3){
 	}
 }
 
-//function to score the game after it has concluded
-function scoreGame(){
-	return scores;
-}
+
 
 // ************** Sockets *********************//
 
@@ -325,6 +286,56 @@ io.on('connection', function(socket) {
 			online_users: online_users
 		});
 	}
+
+	//a player thinks they found a set and has 5 seconds to select it
+	socket.on('found set', function(){
+		selectingSet = true;
+		io.emit('selecting set', socket.user);
+
+	});
+
+	//a player selected a set 
+	socket.on('selected set', function(set) {
+		//should emit all players go back to the finding stage
+		//and the new board
+		selectingSet = false;
+
+		if (collect_set(socket.user, set.card1, set.card2, set.card3)){
+			if (gameOver){
+				scoreGame();
+			} else {
+				dealCards();
+				io.emit('normal play');
+				return 0;
+			}
+		}
+		//it isn't a set
+		io.emit('normal play');
+	});
+
+	//a new player joined and wants to know the board state
+	socket.on('get card info', function(){
+
+		
+
+		socket.emit('dealing cards', deckCards);
+
+		console.log(deckCards);
+	});
+
+	//function to tell the players what cards are currently on the table
+	function dealCards(){
+		io.emit('dealing cards', cards);
+	}
+
+	//function called at the end of the game to score it and notify the players
+	function scoreGame(){
+		io.emit('game ended', scores);
+
+	}
+
+
+
 
 });
 
