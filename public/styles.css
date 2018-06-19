@@ -9,7 +9,6 @@ h1{
 #wrapper {
   margin: auto;
   width: 940px;
-  border: 2px solid green;
 }
 
 #rightbar{
@@ -74,12 +73,20 @@ h1{
 }
 
 #cards div {
-  border: 1px solid black;
   width: 200px;
   height: 130px;
   margin: 5px 10px;
 
   text-align: center;
+
+
+  line-height: 130px;
+  text-align:center;
+}
+
+#cards img {
+    /*padding: 5px;*/
+    vertical-align: middle;
 }
 
 .foundSet{
@@ -89,6 +96,12 @@ h1{
   padding: 10px;
 }
 
-.selected{
-  background-color: red;
+.unselected{
+  border: 1px solid black;
 }
+
+.selected{
+  box-sizing: border-box;
+  outline: 5px solid red;
+}
+

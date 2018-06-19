@@ -35,51 +35,51 @@ function cardName(card){
     //number
     switch (cArr[0]) {
         case 0:
-            name += "1 ";
+            name += "1_";
             break;
         case 1:
-            name += "2 ";
+            name += "2_";
             break;
         case 2:
-            name += "3 ";        
+            name += "3_";        
     }
 
     //filling
-    switch (cArr[2]) {
+    switch (cArr[1]) {
         case 0:
-            name += "solid ";
+            name += "solid_";
             break;
         case 1:
-            name += "empty ";
+            name += "empty_";
             break;
         case 2:
-            name += "shaded ";
+            name += "shaded_";
             break;          
     }
 
     //color
     switch (cArr[2]) {
         case 0:
-            name += "red ";
+            name += "red_";
             break;
         case 1:
-            name += "green ";
+            name += "green_";
             break;
         case 2:
-            name += "blue ";
+            name += "blue_";
             break;          
     }
 
     //shape
     switch (cArr[3]) {
         case 0:
-            name += "oval ";
+            name += "oval";
             break;
         case 1:
-            name += "diamond ";
+            name += "diamond";
             break;
         case 2:
-            name += "squiggle ";
+            name += "squiggle";
             break;          
     }
     return name;
@@ -140,6 +140,7 @@ socket.on("chat message", function(data){
     chatMessage(data.username,data.message);
 });
 
+//adds a new chat message
 function chatMessage(username, message){
     var newMessage = "";
     newMessage = "<li> <b> " + username + "</b>: " + message + "</li>";
@@ -170,13 +171,14 @@ function renderTable(){
                 if (isSelected(cardC)){
                     console.log("Rederning selected card: "+cardC);
                     tableHTML += `
-                        <div class="selected">
-                          ${cardName(cardC)}
+                        <div id="card_${cardC}" class="selected">
+
+                          <img src = "cards/${cardName(cardC)}.png" height = "100">
                         </div>\n`;
                 } else {
                     tableHTML += `
-                    <div id="card_${cardC}">
-                      ${cardName(cardC)}
+                    <div id="card_${cardC}" class="unselected">
+                         <img src = "cards/${cardName(cardC)}.png" height = "100">
                     </div>\n`;
                 }
                 tableHTML += "</td>\n"
@@ -205,7 +207,11 @@ function selectCard(card, player){
         gameState = "selecting cards";
         // console.log("Selected card "+card+": " + cardName(card))
     } else if (gameState = "selecting cards") {
-        selectedCards.push(card);
+        if (!isSelected(card)){
+            selectedCards.push(card);
+        } else {
+            selectedCards.splice(selectedCards.indexOf(card),1);
+        }
         renderTable();
         console.log("Selected card "+card+": " + cardName(card))
     } else {
@@ -220,19 +226,22 @@ function selectCard(card, player){
     }
 }
 
+
+//tells the player that a set is being selected
 socket.on("selecting set", function(){
     gameState = "waiting for set";
     chatMessage("Server",gameState);
 });
 
-socket.on("resume play", function(){
+//a set has been selected and play resumes
+socket.on("resume play", function(msg){
     selectedCards = [];
     gameState = "finding sets";
     renderTable(tableCards);
-    chatMessage("Server","Resuming play");
+    chatMessage("Server",msg);
 });
 
-
+//get the game state from the server
 socket.on('dealing cards', function(server_cards){
     if (connected){
         console.log("Server dealt cards.")
@@ -265,9 +274,13 @@ socket.on('dealing cards', function(server_cards){
 });
 
 
-
+//run after the page is loaded
 window.onload = function(){
 
     socket.emit('get card info');
 
+    console.log(cardName(29));
+    console.log(numToArr(29));
+    console.log(cardName(32));
+    console.log(numToArr(32));
 }

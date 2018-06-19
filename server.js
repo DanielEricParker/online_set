@@ -69,6 +69,65 @@ function arrToNum(arr){
 	return arr[0] + 3*arr[1] + 9*arr[2] + 27*arr[3];
 }
 
+
+//given the number of a card, gives its name
+function cardName(card){
+    var cArr= numToArr(card);
+    var name = "";
+
+    //number
+    switch (cArr[0]) {
+        case 0:
+            name += "1_";
+            break;
+        case 1:
+            name += "2_";
+            break;
+        case 2:
+            name += "3_";        
+    }
+
+    //filling
+    switch (cArr[1]) {
+        case 0:
+            name += "solid_";
+            break;
+        case 1:
+            name += "empty_";
+            break;
+        case 2:
+            name += "shaded_";
+            break;          
+    }
+
+    //color
+    switch (cArr[2]) {
+        case 0:
+            name += "red_";
+            break;
+        case 1:
+            name += "green_";
+            break;
+        case 2:
+            name += "blue_";
+            break;          
+    }
+
+    //shape
+    switch (cArr[3]) {
+        case 0:
+            name += "oval";
+            break;
+        case 1:
+            name += "diamond";
+            break;
+        case 2:
+            name += "squiggle";
+            break;          
+    }
+    return name;
+}
+
 //testing
 // console.log(arrToNum([1,0,0,0]))
 // console.log(arrToNum([1,2,2,2]))
@@ -89,7 +148,7 @@ function newGame(){
 	var gameOver = false;
 	var selectingSet = false;
 
-	drawCards(12);
+	dealCards();
 	io.emit('new game');
 }
 
@@ -112,6 +171,7 @@ function drawCards(numberToDraw){
 		var rand = deckCards[Math.floor((Math.random() * deckSize))];
 		// console.log("Choose card "+ rand);
 		cards[rand] = "table";
+		console.log("Drew card: " + cardName(rand));
 
 		//remove cards from deck list
 		var rand_index = deckCards.indexOf(rand);
@@ -141,6 +201,10 @@ function drawCards(numberToDraw){
 // 0+0+0~0 or 1+1+1=3~0 or 2+2+2=6~0, while all different is
 // 0+1+2=3~0
 function checkSet(card1, card2, card3){
+	// console.log("Checking set: ")
+	// console.log(cardName(arrToNum(card1)));
+	// console.log(cardName(arrToNum(card2)));
+	// console.log(cardName(arrToNum(card3)));
 	if( (card1[0] + card2[0] + card3[0])%3 ==0){
 		if( (card1[1] + card2[1] + card3[1])%3 ==0){
 			if( (card1[2] + card2[2] + card3[2])%3 ==0){
@@ -174,10 +238,13 @@ function checkSetsOnTable(){
 		for (var j = 0; j < i; j++){
 			var c2 = numToArr(tableCards[j]);
 			for (var k = 0; k < j; k++){
-				console.log([i,j,k]);
+				// console.log([i,j,k]);
 				var c3 = numToArr(tableCards[k]);
 				if(checkSet(c1,c2,c3)){
-					console.log(c1,c2,c3);
+					console.log("Set on the table: ");
+					console.log(cardName(arrToNum(c1)));
+					console.log(cardName(arrToNum(c2)));
+					console.log(cardName(arrToNum(c3)));
 					return true;
 				}
 			}
@@ -194,12 +261,15 @@ function checkSetsOnTable(){
 //function to collect a set for a certain player
 //and associated logic
 function collect_set(user, c1,c2,c3){
+	console.log("Possible set from " + user+":" + c1 + " " + c2 + " " + c3);
+
 	//check if this really is a set
 	if (cards[c1] == "table"
 	 	&& cards[c2] == "table"
 	 	&& cards[c3] == "table" 
 	 	&& checkSet(numToArr(c1),numToArr(c2),numToArr(c3))
 		){
+
 		console.log("Set! "+[c1,c2,c3]);
 		//if so
 		//assign those cards to that player
@@ -214,39 +284,42 @@ function collect_set(user, c1,c2,c3){
 		else {
 			scores.set(username,3);
 		}
+		console.log("Assigned set to player " + user);
 
+		dealCards();
+		return true;
+	} else {
+		console.log("Not a set. =(");
+		return false;
+	}
+}
 
-		console.log("Assigned set to player " + hand_name);
-		console.log(cards);
+//function to determine how many cards to deal
+//recognizes if the game has ended if needed
 
-		//if there are fewer than 12 cards on the board,
+//this needs to be rewritten more efficiently
+function dealCards(){
+	//if there are fewer than 12 cards on the board,
 		//or no sets, then draw
 		var anySets = checkSetsOnTable();
 		while (tableSize < 12 || !anySets){
-			console.log("No sets and less than 12 cards on the table.")
+			console.log("No sets or less than 12 cards on the table.")
 			if (deckSize > 0){
 				//draw cards. There must be at least 3
 				console.log("Drawing 3 cards.")
 				drawCards(3);
-				console.log(cards);
 			} else if(anySets) {
 				//there are < 12 cards and none in the deck,
 				//but still a set is still on the table
-				console.log("No cards in the deck, but set on the table.");				
-				return true;
+				console.log("No cards in the deck, but at least one set is still on the table.");
 			} else {
 				//no cards left, so the game ends
 				// console.log("No cards left. Scoring game.")
 				// scoreGame();
 				gameOver = true;
-				return true;
 			}
 			anySets = checkSetsOnTable();
 		}
-		return true;
-	} else {
-		return false;
-	}
 }
 
 
@@ -316,29 +389,31 @@ io.on('connection', function(socket) {
 	//a player selected a set 
 	socket.on('selected set', function(set) {
 		console.log("Player " + socket.user + " submitted a set: "+set);
+		console.log(cardName(set[0]))
+		console.log(cardName(set[1]))
+		console.log(cardName(set[2]))
+
 		//should emit all players go back to the finding stage
 		//and the new board
 		selectingSet = false;
 
-		if (collect_set(socket.user, set.card1, set.card2, set.card3)){
-			console.log("It's a set!");
+		var isSet = collect_set(socket.user, set[0], set[1], set[2]);
+		if (isSet){
+			sendBoard();
 			if (gameOver){
-				dealCards();
 				scoreGame();
 			} else {
-				dealCards();
-				io.emit('resume play');
+				io.emit('resume play',socket.user + " takes a set!");
 				return 0;
 			}
 		} else {
-			console.log("It isn't a set!");
-			io.emit('resume play');
+			io.emit('resume play',"It's not a set!");
 		}
 	});
 
 
 	//function to tell the players what cards are currently on the table
-	function dealCards(){
+	function sendBoard(){
 		io.emit('dealing cards', cards);
 	}
 
