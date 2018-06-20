@@ -7,7 +7,6 @@ var gameState = "finding sets";
 var username = "[Username]";
 //game states:
 //    finding set --- waiting for a player to find a set
-//    waiting for set --- another player is selecting a set
 //    selecting set --- local player is selecting a set
 //    game over
 var cards = [];
@@ -111,13 +110,18 @@ function setUsername() {
 //called whenever someone logs in or out
 socket.on("setup", function(data){
     //the list of users
-    var users = data.online_users;
+    users = data
     console.log(users);
 
     //update the html
     var usersList = "";
-    for(var u = 0; u < users.length; u++){
-        usersList += "<li> " + users[u]+"\n";
+    // for(var u = 0; u < users.length; u++){
+    //     usersList += "<li> " + users[u]+"\n";
+    // }
+    for (var user in users) {
+        if (users.hasOwnProperty(user)) {
+            usersList += "<li> (" + users[user] +") " + user + "\n";
+        }
     }
     $(user_list).html(usersList);
 });
@@ -149,6 +153,7 @@ function chatMessage(username, message){
     $(messages).append(newMessage);
     $("#chatmessages").scrollTop($("#chatmessages")[0].scrollHeight);
 }
+
 
 
 //function to render the cards
@@ -226,19 +231,22 @@ function selectCard(card, player){
     }
 }
 
-
-//tells the player that a set is being selected
-socket.on("selecting set", function(){
-    gameState = "waiting for set";
-    chatMessage("Server",gameState);
-});
-
 //a set has been selected and play resumes
-socket.on("resume play", function(msg){
+socket.on("resume play", function(data){
+    console.log("Resuming play");
+    console.log(data);
     selectedCards = [];
-    gameState = "finding sets";
+    if (data.set.length == 0){
+        chatMessage("Server","It's not a set!")
+    } else {
+        chatMessage("Server",`Player ${data.user} takes a set!
+            <p class="chat_set">
+            <div class="chat_card"><img  src = "cards/${cardName(data.set[0])}.png" height = "25"></div>
+            <div class="chat_card"><img  src = "cards/${cardName(data.set[1])}.png" height = "25"></div>
+            <div class="chat_card"><img  src = "cards/${cardName(data.set[2])}.png" height = "25"></div>`);
+    }
+
     renderTable(tableCards);
-    chatMessage("Server",msg);
 });
 
 //get the game state from the server
@@ -273,14 +281,8 @@ socket.on('dealing cards', function(server_cards){
 
 });
 
-
 //run after the page is loaded
 window.onload = function(){
-
     socket.emit('get card info');
 
-    console.log(cardName(29));
-    console.log(numToArr(29));
-    console.log(cardName(32));
-    console.log(numToArr(32));
 }

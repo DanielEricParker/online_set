@@ -44,17 +44,6 @@ h1{
   padding: 5px;
   margin: 0px;
 }
-/*#chatbox input{
-  padding: 5px;
-  position: relative;
-  width: 60%;
-  margin-right: 10%;
- }
- #chatbox buttom{
-   width: 19%;
-   border: none;
-   padding: 10px;
- }*/
 #messages { list-style-type: none; margin: 0; padding: 0; }
 #messages li { padding: 5px 10px; }
 #messages li:nth-child(odd) { background: #eee; }
@@ -76,12 +65,8 @@ h1{
   width: 200px;
   height: 130px;
   margin: 5px 10px;
-
   text-align: center;
-
-
   line-height: 130px;
-  text-align:center;
 }
 
 #cards img {
@@ -105,3 +90,21 @@ h1{
   outline: 5px solid red;
 }
 
+.chat_set{
+  text-align: center;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.chat_card{
+  display: inline-block;
+  text-align: center;
+  padding: 5px;
+  margin: 5px;
+  line-height: 0;
+  border: 1px solid black;
+  background-color: white;
+  width: 45px;
+}

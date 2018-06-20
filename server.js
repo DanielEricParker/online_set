@@ -49,9 +49,10 @@ for(var i = 0; i < 81; i++){
 }
 var deckSize = cards.length;
 var tableSize = 0;
-var scores = new Map();
 var gameOver = false;
-var selectingSet = false;
+
+var users = {}
+
 
 function numToArr(number){
 	var a = number % 3;
@@ -74,7 +75,6 @@ function arrToNum(arr){
 function cardName(card){
     var cArr= numToArr(card);
     var name = "";
-
     //number
     switch (cArr[0]) {
         case 0:
@@ -86,7 +86,6 @@ function cardName(card){
         case 2:
             name += "3_";        
     }
-
     //filling
     switch (cArr[1]) {
         case 0:
@@ -99,7 +98,6 @@ function cardName(card){
             name += "shaded_";
             break;          
     }
-
     //color
     switch (cArr[2]) {
         case 0:
@@ -112,7 +110,6 @@ function cardName(card){
             name += "blue_";
             break;          
     }
-
     //shape
     switch (cArr[3]) {
         case 0:
@@ -142,11 +139,16 @@ function newGame(){
 	for(var i = 0; i < 81; i++){
 		cards[i]="deck";
 	}
-	var deckSize = cards.length;
-	var tableSize = 0;
-	var scores = new Map();
-	var gameOver = false;
-	var selectingSet = false;
+	deckSize = cards.length;
+	tableSize = 0;
+
+	//reset scores
+	for (var user in users) {
+        if (users.hasOwnProperty(user)) {
+           users[user] = 0;
+        }
+    }
+	gameOver = false;
 
 	dealCards();
 	io.emit('new game');
@@ -277,13 +279,8 @@ function collect_set(user, c1,c2,c3){
 		cards[c1] = username;
 		cards[c2] = username;
 		cards[c3] = username;
-		tableSize -= 3; 
-		if (scores.has(username)){
-			scores.set(username,3+scores.get(username));
-		}
-		else {
-			scores.set(username,3);
-		}
+		tableSize -= 3;
+		users[user] += 3;
 		console.log("Assigned set to player " + user);
 
 		dealCards();
@@ -328,8 +325,6 @@ function dealCards(){
 
 
 
-// set global variables
-var online_users = []
 
 //wait for connections
 io.on('connection', function(socket) {
@@ -338,9 +333,9 @@ io.on('connection', function(socket) {
 	socket.on('add user', function(username){
 		console.log("New user "+username+" connected.");
 		socket.user = username;
-		online_users.push(username);
+		users[username] = 0;
 		//emit list of online users
-		console.log(online_users);
+		console.log(users);
 		updateUsersList();
 		socket.emit('dealing cards', cards);
 
@@ -352,12 +347,10 @@ io.on('connection', function(socket) {
 		console.log("User '"+socket.user+"' disconnected");
 		//remove rom users list.
 
-		var userindex = online_users.indexOf(socket.user);
-		if (userindex > -1) {
-		  online_users.splice(userindex, 1);
-		}
+		delete users[socket.user]
+
 		updateUsersList();
-		console.log(online_users);
+		console.log(users);
 	});
 
 	//listen for a new chat message
@@ -374,17 +367,8 @@ io.on('connection', function(socket) {
 	});
 
 	function updateUsersList(){
-		io.emit('setup', {
-			online_users: online_users
-		});
+		io.emit('setup', users);
 	}
-
-	//a player thinks they found a set and has 5 seconds to select it
-	socket.on('found set', function(){
-		console.log("Player " + socket.user + " thinks they found a set.");
-		selectingSet = true;
-		io.emit('selecting set', socket.user);
-	});
 
 	//a player selected a set 
 	socket.on('selected set', function(set) {
@@ -400,14 +384,15 @@ io.on('connection', function(socket) {
 		var isSet = collect_set(socket.user, set[0], set[1], set[2]);
 		if (isSet){
 			sendBoard();
+			updateUsersList();
 			if (gameOver){
 				scoreGame();
 			} else {
-				io.emit('resume play',socket.user + " takes a set!");
+				io.emit('resume play',{user: socket.user, set: set});
 				return 0;
 			}
 		} else {
-			io.emit('resume play',"It's not a set!");
+			socket.emit('resume play',{user: socket.user, set: []});
 		}
 	});
 
