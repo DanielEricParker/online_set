@@ -1,0 +1,10 @@
+{
+	"name": "online-set",
+	"description": "Simple web app to play set online with friends.",
+	"main": "server.js",
+	"dependencies": {
+		"express": "latest",
+		"mongoose": "^5.1.5",
+		"socket.io": "latest"
+	}
+}
