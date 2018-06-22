@@ -197,7 +197,7 @@ function renderTable(){
         selectCard(card_id);
     });
 
-    $("#deckCards").html(deckCards.length+"cards left in the deck");
+    $("#deckCards").html(deckCards.length+" cards left in the deck");
 }
 
 
@@ -322,8 +322,22 @@ socket.on("game ended", function(){
     renderTable();
 });
 
+//load images beforehand to speed things up later...
+function preloadImage (url) {
+    try {
+        var _img = new Image();
+        _img.src = url;
+        console.log("Loaded image");
+
+    } catch (e) { }
+}
+
+
 
 //run after the page is loaded
 window.onload = function(){
+    for (var c = 0; c < 81; c++){
+        preloadImage("cards/${cardName(cardC)}.png");
+    }
 
 }
