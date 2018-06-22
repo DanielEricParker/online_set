@@ -13,6 +13,7 @@ var cards = [];
 var tableCards = [];
 var deckCards = [];
 var selectedCards = [];
+var users = {};
 
 function numToArr(number){
     var a = number % 3;
@@ -163,15 +164,12 @@ function renderTable(){
     tableHTML = "";
     tableHTML += "<table>\n"
     var numRows = tableCards.length/3
-    // console.log("numRows:"+numRows)
     for (var row = 0; row < numRows; row++){
-        // console.log("row: "+row);
         tableHTML += "<tr>\n"
             for (var col = 0; col < 3; col++){
                 var c = row*3 + col;
                 var cardC = tableCards[c]
                 console.log("Rendering Card "+cardC + ": "+ cardName(cardC));
-                // console.log("c: "+c)
                 tableHTML += "<td>\n"
                 if (isSelected(cardC)){
                     console.log("Rederning selected card: "+cardC);
@@ -192,13 +190,14 @@ function renderTable(){
         tableHTML += "</tr>\n"
     }
     tableHTML += "</table>"  
-    // $("#cards").html(tableHTML);
     $('#cards').html(tableHTML);
     $('#cards div').on("click", function(){
         var card_id = ($(this).attr('id')).substring(5);
         console.log("Clicked card " + card_id);
         selectCard(card_id);
     });
+
+    $("#deckCards").html(deckCards.length+"cards left in the deck");
 }
 
 
@@ -249,6 +248,8 @@ socket.on("resume play", function(data){
     renderTable(tableCards);
 });
 
+
+
 //get the game state from the server
 socket.on('dealing cards', function(server_cards){
     if (connected){
@@ -281,8 +282,48 @@ socket.on('dealing cards', function(server_cards){
 
 });
 
+socket.on('new game'), function(){
+    console.log("New Game!")
+    //set global variables
+    gameState = "finding sets";
+    //game states:
+    //    finding set --- waiting for a player to find a set
+    //    selecting set --- local player is selecting a set
+    //    game over
+    cards = [];
+    tableCards = [];
+    deckCards = [];
+    selectedCards = [];
+}
+
+
+//cheating function for debug
+// function takeSet(){
+//     console.log("Taking a set for the player.")
+//     socket.emit('take set');
+// }
+
+//function to run when the game ends
+socket.on("game ended", function(){
+    console.log("Game ended!");
+    console.log(users);
+    endGameMessage = "Game ended. Scores: <ul>"  
+    for (var user in users) {
+        if (users.hasOwnProperty(user)) {
+            endGameMessage += user + ": " + users[user] + " </br>";
+        }
+    }   
+    endGameMessage +="</ul>";
+    console.log(endGameMessage);
+
+    chatMessage("Server", endGameMessage);
+    chatMessage("Server", "New game starting!");
+    socket.emit('get board');
+    renderTable();
+});
+
+
 //run after the page is loaded
 window.onload = function(){
-    socket.emit('get card info');
 
 }

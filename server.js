@@ -134,25 +134,6 @@ function cardName(card){
 // console.log(numToArr(14))
 // console.log(numToArr(79))
 
-//function to set up a new game and initialize default values;
-function newGame(){
-	for(var i = 0; i < 81; i++){
-		cards[i]="deck";
-	}
-	deckSize = cards.length;
-	tableSize = 0;
-
-	//reset scores
-	for (var user in users) {
-        if (users.hasOwnProperty(user)) {
-           users[user] = 0;
-        }
-    }
-	gameOver = false;
-
-	dealCards();
-	io.emit('new game');
-}
 
 
 //function to draw cards randomly from the deck
@@ -173,7 +154,7 @@ function drawCards(numberToDraw){
 		var rand = deckCards[Math.floor((Math.random() * deckSize))];
 		// console.log("Choose card "+ rand);
 		cards[rand] = "table";
-		console.log("Drew card: " + cardName(rand));
+		// console.log("Drew card: " + cardName(rand));
 
 		//remove cards from deck list
 		var rand_index = deckCards.indexOf(rand);
@@ -284,6 +265,7 @@ function collect_set(user, c1,c2,c3){
 		console.log("Assigned set to player " + user);
 
 		dealCards();
+		console.log("game over [in collect]? = "+ gameOver)
 		return true;
 	} else {
 		console.log("Not a set. =(");
@@ -296,27 +278,48 @@ function collect_set(user, c1,c2,c3){
 
 //this needs to be rewritten more efficiently
 function dealCards(){
-	//if there are fewer than 12 cards on the board,
-		//or no sets, then draw
+		//if there are no cards and no sets left, end the game
+		//if there are no cards, but a set left, do nothing
+		//if there are < 12 cards, draw
+		//if there is no set, draw
 		var anySets = checkSetsOnTable();
+
 		while (tableSize < 12 || !anySets){
-			console.log("No sets or less than 12 cards on the table.")
-			if (deckSize > 0){
-				//draw cards. There must be at least 3
-				console.log("Drawing 3 cards.")
-				drawCards(3);
-			} else if(anySets) {
-				//there are < 12 cards and none in the deck,
-				//but still a set is still on the table
-				console.log("No cards in the deck, but at least one set is still on the table.");
-			} else {
-				//no cards left, so the game ends
-				// console.log("No cards left. Scoring game.")
-				// scoreGame();
+			if (deckSize == 0 && !anySets){
+				console.log("Dealing....the game is over");
 				gameOver = true;
+				console.log(gameOver)
+				return false;
+			} else if (deckSize == 0 && anySets) {
+				console.log("Dealing...there must still be a set left");
+				return true;
+			} else {
+				console.log("Dealing..draw cards, rinse, and repeat.");
+				drawCards(3);
 			}
 			anySets = checkSetsOnTable();
+
 		}
+}
+
+
+//function to set up a new game and initialize default values;
+function resetGlobals(){
+	for(var i = 0; i < 81; i++){
+		cards[i]="deck";
+	}
+	deckSize = cards.length;
+	tableSize = 0;
+
+	//reset scores
+	for (var user in users) {
+        if (users.hasOwnProperty(user)) {
+           users[user] = 0;
+        }
+    }
+	gameOver = false;
+
+	dealCards();
 }
 
 
@@ -370,6 +373,8 @@ io.on('connection', function(socket) {
 		io.emit('setup', users);
 	}
 
+
+
 	//a player selected a set 
 	socket.on('selected set', function(set) {
 		console.log("Player " + socket.user + " submitted a set: "+set);
@@ -377,51 +382,83 @@ io.on('connection', function(socket) {
 		console.log(cardName(set[1]))
 		console.log(cardName(set[2]))
 
-		//should emit all players go back to the finding stage
-		//and the new board
-		selectingSet = false;
-
 		var isSet = collect_set(socket.user, set[0], set[1], set[2]);
-		if (isSet){
-			sendBoard();
-			updateUsersList();
-			if (gameOver){
+		console.log("is it a set?"+isSet)
+		console.log("game over? = "+gameOver)
+		if (gameOver){
+				console.log("looking like the game is over. Scoring...");
 				scoreGame();
-			} else {
-				io.emit('resume play',{user: socket.user, set: set});
-				return 0;
-			}
 		} else {
-			socket.emit('resume play',{user: socket.user, set: []});
+			if (isSet){
+				sendBoard();
+				updateUsersList();
+				io.emit('resume play',{user: socket.user, set: set});
+			} else {
+				socket.emit('resume play',{user: socket.user, set: []});
+			}
 		}
 	});
 
+
+	socket.on('get board', function(){
+		sendBoard();
+	});
 
 	//function to tell the players what cards are currently on the table
 	function sendBoard(){
 		io.emit('dealing cards', cards);
 	}
 
-	//function to do nothing until the new game starts
-	function waiter(){
-
-	}
-
 	//function called at the end of the game to score it and notify the players
 	function scoreGame(){
-		io.emit('game ended', scores);
-
-		setTimeout(waiter(), 3000);
+		io.emit('game ended');
 		newGame();
 	}
 
-});
+	function newGame(){
+		resetGlobals();
+		io.emit('new game');
+		updateUsersList();
+	}
 
+	//cheating function for debuggin
+	// socket.on('take set', function(set){
+	// 	console.log("Taking a set for the player.")
+	// 	var tableCards = [];
+	// 	for (var i = 0; i < 81; i++) {
+	// 	  if (cards[i] == "table"){
+	// 	  	tableCards.push(i);
+	// 	  }
+	// 	}
+	// 	var set = []
+	// 	console.log("There are "+ tableCards.length +" cards on the table.");
+
+	// 	for (var i = 0; i < tableSize; i++){
+	// 		var c1 = numToArr(tableCards[i]);
+	// 		for (var j = 0; j < i; j++){
+	// 			var c2 = numToArr(tableCards[j]);
+	// 			for (var k = 0; k < j; k++){
+	// 				// console.log([i,j,k]);
+	// 				var c3 = numToArr(tableCards[k]);
+	// 				if(checkSet(c1,c2,c3)){
+	// 					set = [arrToNum(c1),arrToNum(c2),arrToNum(c3)];
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+
+	// 	collect_set(socket.user, set[0], set[1], set[2]);
+	// 	sendBoard();
+	// 	updateUsersList();
+	// 	io.emit('resume play',{user: socket.user, set: set});
+	// });
+
+
+});
 
 
 // ************** SERVER **************//
 
 //start the server
 server.listen(3000);
-
-newGame();
+resetGlobals();
