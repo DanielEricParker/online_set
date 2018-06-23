@@ -31,59 +31,20 @@ function numToArr(number){
 function cardName(card){
     var cArr= numToArr(card);
     var name = "";
-
     //number
-    switch (cArr[0]) {
-        case 0:
-            name += "1_";
-            break;
-        case 1:
-            name += "2_";
-            break;
-        case 2:
-            name += "3_";        
-    }
+    numbers = ["1_","2_","3_"];
+    shades = ["solid_","empty_","shaded_"];
+    colors = ["red_","green_","blue_"];
+    shapes = ["oval","diamond","squiggle"];
 
-    //filling
-    switch (cArr[1]) {
-        case 0:
-            name += "solid_";
-            break;
-        case 1:
-            name += "empty_";
-            break;
-        case 2:
-            name += "shaded_";
-            break;          
-    }
+    name +=  numbers[cArr[0]];
+    name +=  shades[cArr[1]];
+    name +=  colors[cArr[2]];
+    name +=  shapes[cArr[3]];
 
-    //color
-    switch (cArr[2]) {
-        case 0:
-            name += "red_";
-            break;
-        case 1:
-            name += "green_";
-            break;
-        case 2:
-            name += "blue_";
-            break;          
-    }
-
-    //shape
-    switch (cArr[3]) {
-        case 0:
-            name += "oval";
-            break;
-        case 1:
-            name += "diamond";
-            break;
-        case 2:
-            name += "squiggle";
-            break;          
-    }
     return name;
 }
+
 
 //tests is a card is selected
 function isSelected(card){
