@@ -424,5 +424,7 @@ io.on('connection', function(socket) {
 // ************** SERVER **************//
 
 //start the server
-server.listen(3000);
+server.listen(port, hostname, () => {
+  console.log(`Server running at http://${hostname}:${port}/`);
+});
 resetGlobals();
